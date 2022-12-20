@@ -17,12 +17,28 @@ export class Favorites {
     constructor(root) {
         this.root = document.querySelector(root)
         this.load()
-        GithubUser.search('maykbrito').then(data => console.log(data))
     }
 
     load() {
         this.entries = JSON.parse(localStorage.getItem('@github-favotites:')) || []
     }
+    async add(username) {
+        try {
+            const user = await GithubUser.search(username)
+            
+            if(user.login === undefined) {
+                throw new Error('Usuário não encontrado')
+            }
+
+            this.entries = [user, ...this.entries]
+            this.update()
+            
+        }catch(error){
+            alert(error.message)
+        }
+
+    }
+
     delete(user) {
         const filteredEntries = this.entries
         .filter(entry => entry.login !== user.login)
@@ -37,6 +53,7 @@ export class FavoritesView extends Favorites {
 
         this.tbody = this.root.querySelector('table tbody')
         this.update()
+        this.onAdd()
     }
 
     update() {
@@ -61,6 +78,16 @@ export class FavoritesView extends Favorites {
             }
             this.tbody.append(row)
         })
+    } 
+
+    onAdd() {
+        const addButton = this.root.querySelector('.search button')
+
+        addButton.onclik = () => {
+            const { value }  = this.root.querySelector('.search input')
+            this.add(value)
+        }
+
     }
     
     createRow() { 
