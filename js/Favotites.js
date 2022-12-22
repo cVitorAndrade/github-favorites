@@ -22,8 +22,20 @@ export class Favorites {
     load() {
         this.entries = JSON.parse(localStorage.getItem('@github-favotites:')) || []
     }
+
+    save() {
+        localStorage.setItem('@github-favotites:', JSON.stringify(this.entries))
+    }
+
     async add(username) {
         try {
+            const userExists = this.entries.find(entry => entry.login === username)
+            console.log(userExists)
+
+            if(userExists) {
+                throw new Error('Usuário já cadastrado')
+            }
+
             const user = await GithubUser.search(username)
             
             if(user.login === undefined) {
@@ -32,6 +44,7 @@ export class Favorites {
 
             this.entries = [user, ...this.entries]
             this.update()
+            this.save()
             
         }catch(error){
             alert(error.message)
@@ -44,6 +57,7 @@ export class Favorites {
         .filter(entry => entry.login !== user.login)
         this.entries = filteredEntries
         this.update()
+        this.save()
     }
 }
 
@@ -70,7 +84,7 @@ export class FavoritesView extends Favorites {
             row.querySelector('.follower').textContent = user.followers
 
             row.querySelector('.remove').onclick = () => {
-                const isOk = confirm(`Tem certeza que deseja deletar ${user.name} ?`)
+                const isOk = confirm(`Tem certeza que deseja deletar?`)
 
                 if(isOk){
                     this.delete(user)
@@ -83,7 +97,7 @@ export class FavoritesView extends Favorites {
     onAdd() {
         const addButton = this.root.querySelector('.search button')
 
-        addButton.onclik = () => {
+        addButton.onclick = () => {
             const { value }  = this.root.querySelector('.search input')
             this.add(value)
         }
